@@ -162,36 +162,36 @@ class RegisterViewController: UIViewController {
         }
         
         // Firebase Create User
-        DatabaseManager.shared.userExists(with: email) { [weak self] exists in
+        DatabaseManager.shared.userExists(with: email, completion: { [weak self] exists in
             guard let strongSelf = self else { return }
             guard !exists else {
                 // user already exists
-                strongSelf.alertUserLoginError(message: "Looks like a user account for that email address already exists.")
+                strongSelf.alertUserRegisterError(message: "Looks like a user account for that email address already exits.")
                 return
             }
-            FirebaseAuth.Auth.auth().createUser(withEmail: email, password: password) { authResult, error in
-                guard authResult != nil, error == nil else {
+            
+            FirebaseAuth.Auth.auth().createUser(withEmail: email, password: password, completion: { authResult, error in
+                guard let result = authResult, error == nil else {
                     print("Error creating user")
                     return
                 }
                 
                 DatabaseManager.shared.insertUser(with: ChatAppUser(firstName: firstName, lastName: lastName, emailAddress: email))
-    //            let user = result.user
-    //            print("Created User: \(user)")
+                let user = result.user
+                print("Created User: \(String(describing: user.email))")
                 strongSelf.navigationController?.dismiss(animated: true, completion: nil)
-            }
-        }
-        
+            })
+        })
     }
     
-    func alertUserLoginError(message: String = "\(UserLoginErrorStringConstants.errorMessage)") {
-        let alert = UIAlertController(title: UserLoginErrorStringConstants.errorTitle, message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: UserLoginErrorStringConstants.actionTitle, style: .cancel, handler: nil))
-        present(alert, animated: true)
-    }
+//    func alertUserLoginError() {
+//        let alert = UIAlertController(title: UserLoginErrorStringConstants.errorTitle, message: UserLoginErrorStringConstants.errorMessage, preferredStyle: .alert)
+//        alert.addAction(UIAlertAction(title: UserLoginErrorStringConstants.actionTitle, style: .cancel, handler: nil))
+//        present(alert, animated: true)
+//    }
     
-    func alertUserRegisterError() {
-        let alert = UIAlertController(title: UserRegisterErrorStringConstants.errorTitle, message: UserRegisterErrorStringConstants.errorMessage, preferredStyle: .alert)
+    func alertUserRegisterError(message: String = "\(UserRegisterErrorStringConstants.errorMessage)") {
+        let alert = UIAlertController(title: UserRegisterErrorStringConstants.errorTitle, message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: UserRegisterErrorStringConstants.actionTitle, style: .cancel, handler: nil))
         present(alert, animated: true)
     }

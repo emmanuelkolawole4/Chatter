@@ -17,16 +17,21 @@ final class DatabaseManager {
 extension DatabaseManager {
     
     public func userExists(with email: String, completion: @escaping ((Bool) -> Void)) {
-        database.child(email).observeSingleEvent(of: .value) { (dataSnapShot) in
-            completion(false)
-            guard dataSnapShot.value as? String != nil else { return }
-        }
-        completion(true)
+        var safeEmail = email.replacingOccurrences(of: ".", with: "-")
+        safeEmail = safeEmail.replacingOccurrences(of: "@", with: "-")
+        
+        database.child(safeEmail).observeSingleEvent(of: .value, with: { dataSnapShot in
+            guard dataSnapShot.value as? String != nil else {
+                completion(false)
+                return
+            }
+            completion(true)
+        })
     }
     
-    /// public api endpoint exposed so that users can be inserted into firebase realtime database
+    /// public function (api endpoint) exposed so that users can be inserted into firebase realtime database
     public func insertUser(with user: ChatAppUser) {
-        database.child(user.emailAddress).setValue(["first_name": user.firstName, "last_name": user.lastName])
+        database.child(user.safeEmail).setValue(["first_name": user.firstName, "last_name": user.lastName])
     }
 }
 
@@ -35,4 +40,11 @@ struct ChatAppUser {
     let lastName: String
     let emailAddress: String
 //    let profilePictureUrl: String
+    
+    var safeEmail: String {
+        var safeEmail = emailAddress.replacingOccurrences(of: ".", with: "-")
+        safeEmail = safeEmail.replacingOccurrences(of: "@", with: "-")
+        return safeEmail
+    }
+    
 }
